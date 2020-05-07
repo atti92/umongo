@@ -118,25 +118,57 @@ class TestEmbeddedDocument(BaseTest):
         assert "'a': 1" in repr_d
         assert "'b': 2" in repr_d
 
-        # Test unknown fields
-        with pytest.raises(AttributeError):
-            embedded_doc.dummy
-        with pytest.raises(AttributeError):
-            embedded_doc.dummy = None
-        with pytest.raises(AttributeError):
-            del embedded_doc.dummy
-        with pytest.raises(KeyError):
-            embedded_doc['dummy']
-        with pytest.raises(KeyError):
-            embedded_doc['dummy'] = None
-        with pytest.raises(KeyError):
-            del embedded_doc['dummy']
-
         # Test allow_none
         d3 = MyDataProxy({'embedded': None})
         assert d3.to_mongo() == {'in_mongo_embedded': None}
         d3.from_mongo({'in_mongo_embedded': None})
         assert d3.get('embedded') is None
+
+    def test_fields_by_attr(self):
+        @self.instance.register
+        class EmbeddedStudent(EmbeddedDocument):
+            name = fields.StrField(required=True)
+            birthday = fields.DateTimeField()
+            gpa = fields.FloatField()
+
+        john = EmbeddedStudent.build_from_mongo(data={'name': 'John Doe'})
+        assert john.name == 'John Doe'
+        john.name = 'William Doe'
+        assert john.name == 'William Doe'
+        del john.name
+        assert john.name is None
+        with pytest.raises(AttributeError):
+            john.missing
+        with pytest.raises(AttributeError):
+            del john.missing
+        with pytest.raises(AttributeError):
+            del john.dump
+        john.dummy = 42
+        assert john.dummy == 42
+        del john.dummy
+        with pytest.raises(AttributeError):
+            john.dummy
+
+    def test_fields_by_items(self):
+        @self.instance.register
+        class EmbeddedStudent(EmbeddedDocument):
+            name = fields.StrField(required=True)
+            birthday = fields.DateTimeField()
+            gpa = fields.FloatField()
+
+        john = EmbeddedStudent.build_from_mongo(data={'name': 'John Doe'})
+        assert john['name'] == 'John Doe'
+        john['name'] = 'William Doe'
+        assert john['name'] == 'William Doe'
+        del john['name']
+        assert john['name'] is None
+        with pytest.raises(KeyError):
+            john['missing']
+        with pytest.raises(KeyError):
+            john['missing'] = None
+        with pytest.raises(KeyError):
+            del john['missing']
+
 
     def test_bad_embedded_document(self):
 

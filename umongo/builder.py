@@ -298,6 +298,8 @@ class BaseBuilder:
         nmspc['schema'] = schema
         if base_tmpl_cls is not MixinDocumentTemplate:
             nmspc['DataProxy'] = data_proxy_factory(name, schema, strict=opts.strict)
+            # Add field names set as class attribute
+            nmspc['_fields'] = set(schema.fields.keys())
 
         if base_tmpl_cls is DocumentTemplate:
             # _build_document_opts cannot determine the indexes given we need to

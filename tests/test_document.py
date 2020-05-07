@@ -102,11 +102,14 @@ class TestDocument(BaseTest):
         with pytest.raises(AttributeError):
             john.missing
         with pytest.raises(AttributeError):
-            john.missing = None
-        with pytest.raises(AttributeError):
             del john.missing
         with pytest.raises(AttributeError):
-            del john.commit
+            del john.dump
+        john.dummy = 42
+        assert john.dummy == 42
+        del john.dummy
+        with pytest.raises(AttributeError):
+            john.dummy
 
     def test_fields_by_items(self):
         john = self.Student.build_from_mongo(data={

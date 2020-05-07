@@ -86,7 +86,6 @@ class EmbeddedDocumentImplementation(Implementation, BaseDataObject):
     """
 
     __slots__ = ('_data', )
-    __real_attributes = None
     opts = EmbeddedDocumentOpts(None, EmbeddedDocumentTemplate, abstract=True)
 
     def __init__(self, **kwargs):
@@ -168,15 +167,10 @@ class EmbeddedDocumentImplementation(Implementation, BaseDataObject):
         self._data.set(name, value)
 
     def __setattr__(self, name, value):
-        # Try to retrieve name among class's attributes and __slots__
-        if not self.__real_attributes:
-            # `dir(self)` result only depend on self's class so we can
-            # compute it once and store it inside the class
-            type(self).__real_attributes = dir(self)
-        if name in self.__real_attributes:
-            object.__setattr__(self, name, value)
-        else:
+        if name in self._fields:
             self._data.set(name, value, to_raise=AttributeError)
+        else:
+            super().__setattr__(name, value)
 
     def __getattr__(self, name):
         if name[:2] == name[-2:] == '__':
@@ -185,9 +179,7 @@ class EmbeddedDocumentImplementation(Implementation, BaseDataObject):
         return value if value is not ma.missing else None
 
     def __delattr__(self, name):
-        if not self.__real_attributes:
-            type(self).__real_attributes = dir(self)
-        if name in self.__real_attributes:
-            object.__delattr__(self, name)
-        else:
+        if name in self._fields:
             self._data.delete(name, to_raise=AttributeError)
+        else:
+            super().__delattr__(name)

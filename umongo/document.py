@@ -132,7 +132,6 @@ class DocumentImplementation(
     """
 
     __slots__ = ('is_created', '_data')
-    __real_attributes = None
     opts = DocumentOpts(None, DocumentTemplate, abstract=True)
 
     def __init__(self, **kwargs):
@@ -268,27 +267,20 @@ class DocumentImplementation(
         super().__delitem__(name)
 
     def __setattr__(self, name, value):
-        # Try to retrieve name among class's attributes and __slots__
-        if not self.__real_attributes:
-            # `dir(self)` result only depend on self's class so we can
-            # compute it once and store it inside the class
-            type(self).__real_attributes = dir(self)
-        if name in self.__real_attributes:
-            object.__setattr__(self, name, value)
-        else:
+        if name in self._fields:
             if self.is_created and name == self.pk_field:
                 raise AlreadyCreatedError("Can't modify id of a created document")
             self._data.set(name, value, to_raise=AttributeError)
+        else:
+            super().__setattr__(name, value)
 
     def __delattr__(self, name):
-        if not self.__real_attributes:
-            type(self).__real_attributes = dir(self)
-        if name in self.__real_attributes:
-            object.__delattr__(self, name)
-        else:
+        if name in self._fields:
             if self.is_created and name == self.pk_field:
                 raise AlreadyCreatedError("Can't modify pk of a created document")
             self._data.delete(name, to_raise=AttributeError)
+        else:
+            super().__delattr__(name)
 
     # Callbacks
 
