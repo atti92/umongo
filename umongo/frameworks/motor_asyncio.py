@@ -33,8 +33,17 @@ class WrappedCursor(AsyncIOMotorCursor):
     def __setattr__(self, name, value):
         return setattr(self.raw_cursor, name, value)
 
+    def __aiter__(self):
+        return self
+
     def clone(self):
         return WrappedCursor(self.document_cls, self.raw_cursor.clone())
+
+    async def next(self):
+        raw = await self.raw_cursor.next()
+        return self.document_cls.build_from_mongo(raw, use_cls=True)
+
+    __anext__ = next
 
     def next_object(self):
         raw = self.raw_cursor.next_object()
