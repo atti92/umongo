@@ -26,7 +26,7 @@ def db():
 
 
 # MongoMockBuilder is 100% based on PyMongoBuilder so no need for really heavy tests
-@pytest.mark.skipif(dep_error is not None, reason=dep_error)
+@pytest.mark.skipif(dep_error is not None, reason="{}".format(dep_error))
 def test_mongomock(classroom_model):
     Student = classroom_model.Student
     john = Student(name='John Doe', birthday=datetime(1995, 12, 12))
