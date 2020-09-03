@@ -56,7 +56,7 @@ def loop():
     return asyncio.get_event_loop()
 
 
-@pytest.mark.skipif(dep_error is not None, reason=dep_error)
+@pytest.mark.skipif(dep_error is not None, reason="{}".format(dep_error))
 class TestMotorAsyncio(BaseDBTest):
 
     def test_create(self, loop, classroom_model):
